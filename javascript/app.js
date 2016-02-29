@@ -14,8 +14,8 @@ function bootstrapSpotifySearch(){
 
   var userInput, searchUrl, results;
   var outputArea = $("#q-results");
-
   $('#spotify-q-button').on("click", function(){
+      outputArea.html('');
       var spotifyQueryRequest;
       spotifyQueryString = $('#spotify-q').val();
       searchUrl = "https://api.spotify.com/v1/search?type=artist&q=" + spotifyQueryString;
@@ -33,14 +33,14 @@ function bootstrapSpotifySearch(){
         var artists = data.artists;
 
         // Clear the output area
-        outputArea.html('');
+        //outputArea.html('');
 
         // The spotify API sends back an arrat 'items'
         // Which contains the first 20 matching elements.
         // In our case they are artists.
         artists.items.forEach(function(artist){
           //var artistLi = $("<li>" + artist.name + " - " + artist.id + "</li>");
-          var artistLi = $("<li>" + artist.name + "</li>");
+          var artistLi = $('<li class="artist">' + artist.name + '</li>');
           artistLi.attr('data-spotify-id', artist.id);
           outputArea.append(artistLi);
 
@@ -56,33 +56,136 @@ function bootstrapSpotifySearch(){
       });
   });
 }
+// COMPLETE THIS FUNCTION
+function displayAlbumsAndTracks(event) {
+  //html hook for our results
+  var appendToMe = $('#albums-and-tracks');
+  //remove the previous results from the hook
+  appendToMe.html('');
+
+  /*** ask api for all albums by artist clicked on ***/
+
+  //prepare to ask
+  var artistID, albumSearchUrl;
+  //get artist id
+  artistID = $(event.target).attr('data-spotify-id')
+  //get artist's album api request url
+  albumSearchUrl = "https://api.spotify.com/v1/artists/"+ artistID + "/albums";
+  //ask
+  var albumSearch = $.ajax(albumSearchUrl, {
+    type: "GET",
+    dataTYPE: 'json'
+  });
+  //loop through albums and list out
+  albumSearch.done(function(data){
+    var albums = data.items;
+    albums.forEach(function(album){
+      //setup album html with album id and url
+      /*Q: Why do I have to wrap in jQ selector?*/
+      var albumHTML = $('<ul><span class="album" data-albumID="' + album.id + '"><a href="' + album.href + '">' + album.name + '</a></span></ul>');
+
+      //append album html to document
+      appendToMe.append(albumHTML);
+
+      /*** for each album, ask api for release date ***/
+
+      //prepare to ask
+      var dateSearchUrl;
+      dateSearchUrl = "https://api.spotify.com/v1/albums/" + album.id;
+      //ask
+      var dateSearch = $.ajax(dateSearchUrl, {
+        type: "GET",
+        dataType: 'json'
+      });
+
+      //find and append
+      dateSearch.done(function(data){
+        var date = $('<span class="release-date">' + data.release_date + '</span>');
+        albumHTML.append(date);
+      });
+
+      /*** for each album, ask api for tracks ***/
+
+      //prepare to ask
+      var trackSearchUrl, trackSearch;
+      trackSearchUrl = "https://api.spotify.com/v1/albums/" + album.id + "/tracks";
+      //ask
+      trackSearch = $.ajax(trackSearchUrl, {
+        type: "GET",
+        dataType: 'json'
+      });
+      //loop through tracks and list out
+      trackSearch.done(function(data){
+        var tracks = data.items;
+        tracks.forEach(function(track){
+          //setup track html with track id as data type and track url as href
+          // var trackHTML = '<li class="track" data-trackID="' track.id + '"><a href="' + track.href + '">';
+          var trackHTML = $('<li class="track" data-trackID="' + track.id + '"><a href="' + track.href + '">' + track.name + '</a></ul>');
+          //add track name to track html
+          // trackHTML += track.name;
+          // trackHTML += '</li>';
+          //append track html to album html
+          albumHTML.append(trackHTML);
+        }); //end track each loop
+      }); //end trackSearch ajax request
+    }); //end album each loop
+  }); //end albumSearch ajax reqest
+} //end displayAlbumsAndTracks function
+
+
+
+  // 1. Query the Spotify API for every album produced by the artist you clicked on.
+//   artistID = $(event.target).attr('data-spotify-id');
+//   albumSearchUrl = 'https://api.spotify.com/v1/artists/' + artistID + '/albums';
+//   albumSearch = $.ajax(albumSearchUrl, {
+//     type: "GET",
+//     dataType: 'json'
+//   });
+//   var albumsHTML = '<ul class="albums">';
+//   albumSearch.done(function(data){
+//     var albums = data.items;
+//     albums.forEach(function(album){
+//       albumsHTML += '<li>' + album.name + '</li>';
+//     });
+//   });
+//   albumsHTML += '</ul>';
+//   appendToMe.html('');
+//   appendToMe.html(albumsHTML);
+// }
+
+
+
 
 /* COMPLETE THIS FUNCTION! */
-function displayAlbumsAndTracks(event) {
-  var appendToMe = $('#albums-and-tracks');
-    $('li').css("color", "blue");
-    $(this).css("color", "red");
-    var artistID = $(this).data('spotify-id');
-    var albumUrl = 'https://api.spotify.com/v1/artists/' + artistID + '/albums';
-    var albumsRequest = $.ajax(albumUrl, {
-      type: "GET",
-      dataType: "json"
-    });
-    albumsRequest.done(function (data) {
-      var albums = data.items;
-      var albumsHTML = '<ul class="albums">';
-      albums.forEach(function(album){
-        var albumLi = '<li class="single-album" data-album-id="' + album.id + '>' + album.name + '</li>';
-      });
-      albumsHTML += albumLi + '</ul>';
-      //$('#q-results li').append(albumsHTML);
-      $(event.target).append(albumsHTML);
-      console.log(albumsHTML);
-    });
-
-
-  //console.log($(event.target).attr('data-spotify-id'));//.attr('data-spotify-id'));
-}
+// function displayAlbumsAndTracks(event) {
+//   var appendToMe = $('#albums-and-tracks');
+//     $('li').css("color", "blue");
+//     $(this).css("color", "red");
+//     var artistID = $(this).data('spotify-id');
+//     var albumSearch = 'https://api.spotify.com/v1/artists/' + artistID + '/albums';
+//     var albumsRequest = $.ajax({
+//       type: "GET",
+//       dataType: "json",
+//       url: albumSearch
+//     });
+//     albumsRequest.done(function (data) {
+//       var albums = data;
+//
+//       appendToMe.html('');
+//
+//       //var albumsHTML = '<ul class="albums">';
+//
+//       albums.items.forEach(function(album){
+//       var albumLi = '<li class="single-album" data-album-id="' + album.id + '>' + album.name + '</li>';
+//       albumsHTML += albumLi;
+//       });
+//       albumsHTML += '</ul>';
+//       //$('#q-results li').append(albumsHTML);
+//
+//       console.log(albumsHTML);
+//
+//     });
+//}
 
 
 /* YOU MAY  WANT TO CREATE HELPER FUNCTIONS OF YOUR OWN */
