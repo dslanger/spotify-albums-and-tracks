@@ -3,6 +3,7 @@
 // like attach event listeners and any dom manipulation.
 (function(){
   $(document).ready(function(){
+    $('h1').before('<p style="color: red">this is refactor-app.js</p>');
     bootstrapSpotifySearch();
   });
 })();
@@ -58,58 +59,42 @@ function bootstrapSpotifySearch(){
 }
 // COMPLETE THIS FUNCTION
 function displayAlbumsAndTracks(event) {
-  //html hook for our results
+  //hook for results
   var appendToMe = $('#albums-and-tracks');
-  //remove the previous results from the hook
+  //remove old results from hook
   appendToMe.html('');
 
-  /*** ask api for all albums by artist clicked on ***/
 
-  //prepare to ask
-  var artistID, albumSearchUrl;
-  //get artist id
-  artistID = $(event.target).attr('data-spotify-id')
-  //get artist's album api request url
-  albumSearchUrl = "https://api.spotify.com/v1/artists/"+ artistID + "/albums";
-  //ask
-  var albumSearch = $.ajax(albumSearchUrl, {
-    type: "GET",
-    dataTYPE: 'json'
-  });
-  //loop through albums and list out
-  albumSearch.done(function(data){
+  function listAlbums () {
+    var artistID = $(event.target).attr('data-spotify-id')
+    var albumSearchUrl = "https://api.spotify.com/v1/artists/"+ artistID + "/albums";
+    var albumSearch = $.ajax(albumSearchUrl, {
+      type: "GET",
+      dataTYPE: 'json'
+    });
+    albumSearch.done(function(data){
     var albums = data.items;
     albums.forEach(function(album){
-      //setup album html with album id and url
-      /*Q: Why do I have to wrap in jQ selector?*/
       var albumHTML = $('<ul><span class="album" data-albumID="' + album.id + '"><a href="' + album.external_urls.spotify + '">' + album.name + '</a></span></ul>');
-
-      //append album html to document
       appendToMe.append(albumHTML);
+  }
 
-      /*** for each album, ask api for release date ***/
+  function listDates () {
+    var dateSearchUrl = "https://api.spotify.com/v1/albums/" + album.id;
+    var dateSearch = $.ajax(dateSearchUrl, {
+      type: "GET",
+      dataType: 'json'
+    });
+    dateSearch.done(function(data){
+      var date = $('<span class="release-date">' + data.release_date + '</span>');
+      albumHTML.append(date);
+    });
+  }
 
-      //prepare to ask
-      var dateSearchUrl;
-      dateSearchUrl = "https://api.spotify.com/v1/albums/" + album.id;
-      //ask
-      var dateSearch = $.ajax(dateSearchUrl, {
-        type: "GET",
-        dataType: 'json'
-      });
 
-      //find and append
-      dateSearch.done(function(data){
-        var date = $('<span class="release-date">' + data.release_date + '</span>');
-        albumHTML.append(date);
-      });
 
-      /*** for each album, ask api for tracks ***/
-
-      //prepare to ask
       var trackSearchUrl, trackSearch;
       trackSearchUrl = "https://api.spotify.com/v1/albums/" + album.id + "/tracks";
-      //ask
       trackSearch = $.ajax(trackSearchUrl, {
         type: "GET",
         dataType: 'json'
